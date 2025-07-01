@@ -1,4 +1,4 @@
-# PCIe Simulation with Python Interface
+# PCIe Simulation with PIPED Interface
 
 This project has been modified to support communication between the Xilinx PCIe simulation and Python scripts via Linux named pipes (FIFOs).
 
