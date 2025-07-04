@@ -70,15 +70,25 @@ interface pipe_interface;
     task automatic read_command();
         int bytes_read;
         string cmd_str;
+        int str_len;
         
         if (!pipe_ready) return;
         
-        // Read command string from pipe (expecting JSON-like format)
+        // Read command string from pipe (expecting format: "cmd:addr:data:length:tag")
         bytes_read = $fgets(cmd_str, cmd_pipe_fd);
         
         if (bytes_read > 0) begin
-            // Parse command string (simplified - expecting format: "cmd:addr:data:length:tag")
-            if (parse_command_string(cmd_str, current_cmd)) begin
+            // Remove trailing newline/whitespace
+            str_len = cmd_str.len();
+            while (str_len > 0 && (cmd_str.getc(str_len-1) == "\n" || cmd_str.getc(str_len-1) == "\r" || cmd_str.getc(str_len-1) == " ")) begin
+                str_len--;
+            end
+            if (str_len != cmd_str.len()) begin
+                cmd_str = cmd_str.substr(0, str_len-1);
+            end
+            
+            // Parse command string
+            if (str_len > 0 && parse_command_string(cmd_str, current_cmd)) begin
                 cmd_valid = 1'b1;
                 $display("[%t] : Received command: type=0x%02x, addr=0x%08x, data=0x%08x", 
                         $realtime, current_cmd.cmd_type, current_cmd.address, current_cmd.data);
@@ -110,14 +120,14 @@ interface pipe_interface;
         int num_tokens;
         
         // Split string by colons
-        num_tokens = split_string(cmd_str, ":", tokens);
+        num_tokens = split_string(cmd_str, tokens);
         
         if (num_tokens >= 5) begin
-            cmd.cmd_type = tokens[0].atohex();
-            cmd.address  = tokens[1].atohex();
-            cmd.data     = tokens[2].atohex();
-            cmd.length   = tokens[3].atohex();
-            cmd.tag      = tokens[4].atohex();
+            cmd.cmd_type = hex_string_to_int(tokens[0]);
+            cmd.address  = hex_string_to_int(tokens[1]);
+            cmd.data     = hex_string_to_int(tokens[2]);
+            cmd.length   = hex_string_to_int(tokens[3]);
+            cmd.tag      = hex_string_to_int(tokens[4]);
             return 1'b1;
         end
         
@@ -125,25 +135,67 @@ interface pipe_interface;
     endfunction
     
     // Helper function to split strings
-    function automatic int split_string(string str, string delimiter, ref string tokens[]);
+    function automatic int split_string(string str, ref string tokens[]);
         int pos = 0;
         int start = 0;
         int count = 0;
+        int str_len;
+        byte delimiter = ":";
         
-        while (pos < str.len() && count < 6) begin
-            pos = str.substr(start, str.len()-1).find(delimiter);
-            if (pos == -1) begin
-                tokens[count] = str.substr(start, str.len()-1);
-                count++;
-                break;
-            end else begin
-                tokens[count] = str.substr(start, start + pos - 1);
-                count++;
-                start = start + pos + 1;
+        str_len = str.len();
+        
+        while (start < str_len && count < 6) begin
+            // Find next delimiter
+            pos = start;
+            while (pos < str_len && str.getc(pos) != delimiter) begin
+                pos++;
             end
+            
+            // Extract token
+            if (pos > start) begin
+                tokens[count] = str.substr(start, pos-1);
+                count++;
+            end
+            
+            // Move past delimiter
+            start = pos + 1;
+            
+            // If we reached end of string, we're done
+            if (pos >= str_len) break;
         end
         
         return count;
+    endfunction
+    
+    // Helper function to convert hex string to integer
+    function automatic int hex_string_to_int(string hex_str);
+        int result = 0;
+        int str_len;
+        int i;
+        byte c;
+        int digit_val;
+        
+        str_len = hex_str.len();
+        
+        for (i = 0; i < str_len; i++) begin
+            c = hex_str.getc(i);
+            
+            // Convert character to hex digit value
+            if (c >= "0" && c <= "9") begin
+                digit_val = c - "0";
+            end else if (c >= "A" && c <= "F") begin
+                digit_val = c - "A" + 10;
+            end else if (c >= "a" && c <= "f") begin
+                digit_val = c - "a" + 10;
+            end else begin
+                // Invalid hex character, skip
+                continue;
+            end
+            
+            result = (result << 4) + digit_val;
+        end
+        
+        return result;
     endfunction
     
     // Cleanup pipes

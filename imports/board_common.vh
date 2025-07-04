@@ -64,7 +64,7 @@
 `define IO_TRUE                      1
 `define IO_FALSE                     0
 
-`define TX_TASKS                     board.RP.tx_usrapp
+`define TX_TASKS                     board_with_pipe.RP.tx_usrapp
 
 // Endpoint Sys clock clock frequency 100 MHz -> half clock -> 5000 pS
 `define SYS_CLK_COR_HALF_CLK_PERIOD         5000

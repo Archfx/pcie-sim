@@ -197,6 +197,7 @@ wire    [63:0]                  s_axis_cc_tparity;
 wire    [63:0]                  s_axis_rq_tparity;
 
 reg     [255:0]                 testname;
+integer                         cmd_pipe_check;   // For checking Python interface pipe existence
 integer                         test_vars [31:0];
 reg     [7:0]                   exp_tag;
 reg     [7:0]                   expect_cpld_payload [4095:0];
@@ -310,12 +311,16 @@ initial begin
   if ($value$plusargs("TESTNAME=%s", testname))
       $display("Running test {%0s}......", testname);
   else begin
-      // $display("[%t] %m: No TESTNAME specified!", $realtime);
-      // $finish(2);
-
-        testname = "pio_writeReadBack_test0";
-        $display("Running default test {%0s}......", testname);
-
+      // Check if Python interface pipes exist to determine mode
+      cmd_pipe_check = $fopen("/tmp/pcie_sim_cmd", "r");
+      if (cmd_pipe_check != 0) begin
+          $fclose(cmd_pipe_check);
+          testname = "python_interface_test";
+          $display("Running Python interface mode (pipes detected)......");
+      end else begin
+          testname = "pio_writeReadBack_test0";
+          $display("Running default test {%0s}......", testname);
+      end
   end
 
   expect_status       = 0;
@@ -332,6 +337,16 @@ initial begin
   if (testname == "dummy_test") begin
       $display("[%t] %m: Invalid TESTNAME: %0s", $realtime, testname);
       $finish(2);
+  end
+  else if (testname == "python_interface_test") begin
+      $display("[%t] %m: Python interface test mode - PCIe system ready for Python commands", $realtime);
+      // Just initialize the PCIe system and wait - Python interface will handle the rest
+      TSK_SYSTEM_INITIALIZATION;
+      $display("[%t] %m: PCIe system initialized. Python interface is now active.", $realtime);
+      // Don't finish - let the simulation run indefinitely for Python interaction
+      forever begin
+          #1000000; // 1ms delay loop
+      end
   end
   `include "tests.vh"
   else begin
@@ -384,23 +399,23 @@ end
         //--------------------------------------------------------------------------
         // Event # 2: Wait for Transaction link to be asserted...
         //--------------------------------------------------------------------------
-        board.RP.cfg_usrapp.TSK_WRITE_CFG_DW(32'h01, 32'h00000007, 4'h1);
+        board_with_pipe.RP.cfg_usrapp.TSK_WRITE_CFG_DW(32'h01, 32'h00000007, 4'h1);
 		
         // RP -- Program PCIe Device Control Register for max payload size == 1024 bytes
         $display("[%t] : Reading RP DEV CTL REG 0x78", $realtime);
-        board.RP.cfg_usrapp.TSK_READ_CFG_DW(DEV_CTRL_REG_ADDR/4);	
-        $display("[%t] : RP DEV CTL REG is %x", $realtime, board.RP.cfg_usrapp.cfg_mgmt_read_data);
+        board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(DEV_CTRL_REG_ADDR/4);	
+        $display("[%t] : RP DEV CTL REG is %x", $realtime, board_with_pipe.RP.cfg_usrapp.cfg_mgmt_read_data);
         
-        board.RP.cfg_usrapp.TSK_WRITE_CFG_DW(DEV_CTRL_REG_ADDR/4,( board.RP.cfg_usrapp.cfg_mgmt_read_data | (DEV_CAP_MAX_PAYLOAD_SUPPORTED * 32)) , 4'h1);
+        board_with_pipe.RP.cfg_usrapp.TSK_WRITE_CFG_DW(DEV_CTRL_REG_ADDR/4,( board_with_pipe.RP.cfg_usrapp.cfg_mgmt_read_data | (DEV_CAP_MAX_PAYLOAD_SUPPORTED * 32)) , 4'h1);
         
         $display("[%t] : Reading RP DEV CTL REG 0x78", $realtime);
-        board.RP.cfg_usrapp.TSK_READ_CFG_DW(DEV_CTRL_REG_ADDR/4);    
-        $display("[%t] : RP DEV CTL REG is %x", $realtime, board.RP.cfg_usrapp.cfg_mgmt_read_data);
+        board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(DEV_CTRL_REG_ADDR/4);    
+        $display("[%t] : RP DEV CTL REG is %x", $realtime, board_with_pipe.RP.cfg_usrapp.cfg_mgmt_read_data);
 
 
-        board.RP.tx_usrapp.TSK_TX_CLK_EAT(100);
-        wait (board.RP.pcie_4_0_rport.user_lnk_up == 1);
-        board.RP.tx_usrapp.TSK_TX_CLK_EAT(100);
+        board_with_pipe.RP.tx_usrapp.TSK_TX_CLK_EAT(100);
+        wait (board_with_pipe.RP.pcie_4_0_rport.user_lnk_up == 1);
+        board_with_pipe.RP.tx_usrapp.TSK_TX_CLK_EAT(100);
 
         $display("[%t] : Transaction Link Is Up...", $realtime);
         
@@ -508,7 +523,7 @@ end
     task TSK_RESET;
         input reset_;
 
-        board.sys_rst_n = reset_;
+        board_with_pipe.sys_rst_n = reset_;
 
     endtask
 
@@ -530,19 +545,19 @@ end
         
         begin
 
-            for (board.RP.tx_usrapp.ii = 0; board.RP.tx_usrapp.ii <= 6; board.RP.tx_usrapp.ii =
-                board.RP.tx_usrapp.ii + 1) begin
-                if (board.RP.tx_usrapp.BAR_INIT_P_BAR_ENABLED[board.RP.tx_usrapp.ii] == 2'b10) begin
-                    mem32_base = board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0];
+            for (board_with_pipe.RP.tx_usrapp.ii = 0; board_with_pipe.RP.tx_usrapp.ii <= 6; board_with_pipe.RP.tx_usrapp.ii =
+                board_with_pipe.RP.tx_usrapp.ii + 1) begin
+                if (board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR_ENABLED[board_with_pipe.RP.tx_usrapp.ii] == 2'b10) begin
+                    mem32_base = board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0];
                     mem32_base_enabled = 1'b1; end
 
-                else if(board.RP.tx_usrapp.BAR_INIT_P_BAR_ENABLED[board.RP.tx_usrapp.ii] == 2'b11) begin
-                    mem64_base =  {board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii+1][31:0],
-                                   board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0]};
+                else if(board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR_ENABLED[board_with_pipe.RP.tx_usrapp.ii] == 2'b11) begin
+                    mem64_base =  {board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii+1][31:0],
+                                   board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0]};
                     mem64_base_enabled = 1'b1; end
 
-                else if(board.RP.tx_usrapp.BAR_INIT_P_BAR_ENABLED[board.RP.tx_usrapp.ii] == 2'b01) begin
-                    io_base =  board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0];
+                else if(board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR_ENABLED[board_with_pipe.RP.tx_usrapp.ii] == 2'b01) begin
+                    io_base =  board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0];
                     io_base_enabled = 1'b1; end
 
             end
@@ -552,37 +567,37 @@ end
             case(type_)
             8'h01: begin
                 if(mem32_base_enabled) begin
-                    board.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_32(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                              board.RP.tx_usrapp.DEFAULT_TC, 10'd1,
+                    board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_32(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                              board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 10'd1,
                                                               mem32_base+8'h10, 4'h0, 4'hF, set_malformed);
                 end
                 else if(mem64_base_enabled) begin
-                    board.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_64(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                              board.RP.tx_usrapp.DEFAULT_TC, 10'd1,
+                    board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_64(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                              board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 10'd1,
                                                               mem64_base+8'h10, 4'h0, 4'hF, set_malformed);
                 end
             end
             8'h02: begin
                 if(mem32_base_enabled) begin
-                    board.RP.tx_usrapp.TSK_TX_MEMORY_READ_32(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                             board.RP.tx_usrapp.DEFAULT_TC, 10'd1,
+                    board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_READ_32(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                             board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 10'd1,
                                                              mem32_base+8'h10, 4'h0, 4'h0);
                  end
                  else if(mem64_base_enabled) begin
-                    board.RP.tx_usrapp.TSK_TX_MEMORY_READ_64(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                             board.RP.tx_usrapp.DEFAULT_TC, 10'd1,
+                    board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_READ_64(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                             board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 10'd1,
                                                              mem64_base+8'h10, 4'h0, 4'h0);
                 end
             end
             8'h04: begin
                 if(io_base_enabled) begin
-                    board.RP.tx_usrapp.TSK_TX_IO_WRITE(board.RP.tx_usrapp.DEFAULT_TAG,
+                    board_with_pipe.RP.tx_usrapp.TSK_TX_IO_WRITE(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
                                                        io_base, 4'hF, 32'hdead_beef);
                 end
             end
             8'h08: begin
                 if(io_base_enabled) begin
-                    board.RP.tx_usrapp.TSK_TX_IO_READ(board.RP.tx_usrapp.DEFAULT_TAG,
+                    board_with_pipe.RP.tx_usrapp.TSK_TX_IO_READ(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
                                                       io_base, 4'hF);
                 end
             end
@@ -3155,11 +3170,11 @@ end
             //-----------------------------------------------------------------------\\
             if (active_ == 1'b1) begin
                 // read data driven into memory
-                board.RP.com_usrapp.TSK_READ_DATA_512(first_, last_call_,`TX_LOG,pcie_tlp_data,pcie_tlp_rem);
+                board_with_pipe.RP.com_usrapp.TSK_READ_DATA_512(first_, last_call_,`TX_LOG,pcie_tlp_data,pcie_tlp_rem);
             end
             //-----------------------------------------------------------------------\\
             if (last_call_)
-                 board.RP.com_usrapp.TSK_PARSE_FRAME(`TX_LOG);
+                 board_with_pipe.RP.com_usrapp.TSK_PARSE_FRAME(`TX_LOG);
             //-----------------------------------------------------------------------\\
         end
     endtask // TSK_TX_SYNCHRONIZE
@@ -3331,7 +3346,7 @@ end
   task TSK_SIMULATION_TIMEOUT;
     input [31:0] timeout;
     begin
-      force board.RP.rx_usrapp.sim_timeout = timeout;
+      force board_with_pipe.RP.rx_usrapp.sim_timeout = timeout;
     end
   endtask
 
@@ -3993,40 +4008,40 @@ end
     $display("[%t] : Reading Local Configuration Space via CFG interface...", $realtime);
 
     CFG_DWADDR = 10'h0;
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
 
     CFG_DWADDR = 10'h4;
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
 
     CFG_DWADDR = 10'h5;
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
 
     CFG_DWADDR = 10'h6;
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
 
     CFG_DWADDR = 10'h7;
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
 
     CFG_DWADDR = 10'h8;
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
 
     CFG_DWADDR = 10'h9;
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
 
     CFG_DWADDR = 10'hc;
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
 
     CFG_DWADDR = 10'h17;
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
 
     CFG_DWADDR = 10'h18;
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
 
     CFG_DWADDR = 10'h19;
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
 
     CFG_DWADDR = 10'h1a;
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(CFG_DWADDR);
 
       end
     endtask // TSK_CFG_READBACK_CONFIG
@@ -4510,12 +4525,12 @@ task TSK_SPEED_CHANGE;
    input    [3:0]    target_link_speed;
 
    begin
-       board.RP.cfg_usrapp.TSK_WRITE_CFG_DW(32'h3c, {28'h0,target_link_speed}, 4'h1);
-       board.RP.cfg_usrapp.TSK_WRITE_CFG_DW(32'h34, 32'h00810020, 4'hF);
-       wait(board.RP.pcie_4_0_rport.cfg_ltssm_state == 6'h0B);
-       wait(board.RP.pcie_4_0_rport.cfg_ltssm_state == 6'h10);
-       wait (board.RP.pcie_4_0_rport.user_lnk_up == 1);
-       board.RP.tx_usrapp.TSK_TX_CLK_EAT(100);
+       board_with_pipe.RP.cfg_usrapp.TSK_WRITE_CFG_DW(32'h3c, {28'h0,target_link_speed}, 4'h1);
+       board_with_pipe.RP.cfg_usrapp.TSK_WRITE_CFG_DW(32'h34, 32'h00810020, 4'hF);
+       wait(board_with_pipe.RP.pcie_4_0_rport.cfg_ltssm_state == 6'h0B);
+       wait(board_with_pipe.RP.pcie_4_0_rport.cfg_ltssm_state == 6'h10);
+       wait (board_with_pipe.RP.pcie_4_0_rport.user_lnk_up == 1);
+       board_with_pipe.RP.tx_usrapp.TSK_TX_CLK_EAT(100);
        TSK_TX_TYPE0_CONFIGURATION_READ(DEFAULT_TAG, 12'hD0, 4'hF);
        DEFAULT_TAG = DEFAULT_TAG + 1;
        TSK_WAIT_FOR_READ_DATA;

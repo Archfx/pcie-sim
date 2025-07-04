@@ -70,21 +70,49 @@ module board_with_pipe;
   assign cfg_ltssm_state   =  board_with_pipe.EP.pcie4_uscale_plus_0_i.inst.cfg_ltssm_state;
 
   // Python PIPE communication interface
-  pipe_interface pipe_if();
+  pipe_interface_simple pipe_if();
   
   // Command processing variables
   reg python_cmd_processing = 1'b0;
   reg [31:0] python_read_data;
   reg [7:0] python_response_status;
   
+  // Task local variables (must be at module level in Verilog)
+  reg [7:0] rsp_type;
+  reg [31:0] read_data;
+  reg [7:0] tag;
+  reg [7:0] status;
+  reg [31:0] timestamp;
+  
+  // PCIe test framework variables (needed by pci_exp_expect_tasks.vh)
+  event rcvd_cpld, rcvd_memrd, rcvd_memwr;
+  event rcvd_cpl, rcvd_memrd64, rcvd_memwr64;
+  event rcvd_msg, rcvd_msgd, rcvd_cfgrd0;
+  event rcvd_cfgwr0, rcvd_cfgrd1, rcvd_cfgwr1;
+  event rcvd_iord, rcvd_iowr;
+  reg [7:0] frame_store_rx[5119:0];
+  integer frame_store_rx_idx;
+  reg [7:0] frame_store_tx[5119:0];
+  integer frame_store_tx_idx;
+  
+  // Initialize PCIe test variables
+  initial begin
+    frame_store_rx_idx = 0;
+    frame_store_tx_idx = 0;
+  end
+  
   // Include PCIe test tasks
   `include "pci_exp_expect_tasks.vh"
 
+  //------------------------------------------------------------------------------//
+  // Clock Generation
+  //------------------------------------------------------------------------------//
+
+  // Simulation Clock Generation
   sys_clk_gen_ds # (
     .halfcycle(REF_CLK_HALF_CYCLE),
     .offset(0)
-  )
-  CLK_GEN_RP (
+  ) CLK_GEN_RP (
     .sys_clk_p(rp_sys_clk_p),
     .sys_clk_n(rp_sys_clk_n)
   );
@@ -92,8 +120,7 @@ module board_with_pipe;
   sys_clk_gen_ds # (
     .halfcycle(REF_CLK_HALF_CYCLE),
     .offset(0)
-  )
-  CLK_GEN_EP (
+  ) CLK_GEN_EP (
     .sys_clk_p(ep_sys_clk_p),
     .sys_clk_n(ep_sys_clk_n)
   );
@@ -112,8 +139,11 @@ module board_with_pipe;
   //------------------------------------------------------------------------------//
   // Simulation endpoint with PIO Slave
   //------------------------------------------------------------------------------//
-  xilinx_pcie4_uscale_ep 
-  EP (
+  //
+  // PCI-Express Endpoint Instance
+  //
+
+  xilinx_pcie4_uscale_ep EP (
     // SYS Inteface
     .sys_clk_n(ep_sys_clk_n),
     .sys_clk_p(ep_sys_clk_p),
@@ -128,7 +158,12 @@ module board_with_pipe;
 
   //------------------------------------------------------------------------------//
   // Simulation Root Port Model
+  // (Comment out this module to interface EndPoint with BFM)
+  
   //------------------------------------------------------------------------------//
+  // PCI-Express Model Root Port Instance
+  //------------------------------------------------------------------------------//
+
   xilinx_pcie4_uscale_rp # (
     .PF0_DEV_CAP_MAX_PAYLOAD_SIZE(PF0_DEV_CAP_MAX_PAYLOAD_SIZE)) RP (
 
@@ -149,14 +184,14 @@ module board_with_pipe;
   //------------------------------------------------------------------------------//
   initial begin
     // Initialize PIPE interface
-    pipe_if.init_pipes();
+    pipe_if.init_pipes("/tmp/pcie_sim_cmd", "/tmp/pcie_sim_rsp");
     
     // Wait for system initialization
     wait(sys_rst_n);
     repeat(1000) @(posedge rp_sys_clk_p);
     
     // Initialize PCIe system
-    TSK_SYSTEM_INITIALIZATION;
+    RP.tx_usrapp.TSK_SYSTEM_INITIALIZATION;
     
     $display("[%t] : PCIe system initialized. Ready for Python commands.", $realtime);
     
@@ -181,53 +216,58 @@ module board_with_pipe;
   // Process Python Commands
   //------------------------------------------------------------------------------//
   task process_python_command();
-    pipe_interface::pipe_rsp_t response;
-    
-    response.tag = pipe_if.current_cmd.tag;
-    response.timestamp = $realtime;
-    response.status = 8'h00; // Success by default
+  begin
+    tag = pipe_if.current_cmd.tag;
+    timestamp = $realtime;
+    status = 8'h00; // Success by default
     
     case (pipe_if.current_cmd.cmd_type)
       8'h01: begin // PCIe Configuration Read
         $display("[%t] : Python CMD: Config Read - Addr: 0x%08x", $realtime, pipe_if.current_cmd.address);
-        TSK_TX_TYPE0_CONFIGURATION_READ(pipe_if.current_cmd.tag, pipe_if.current_cmd.address[11:0], 4'hF);
-        TSK_WAIT_FOR_READ_DATA;
-        response.rsp_type = 8'h01;
-        response.read_data = P_READ_DATA;
-        $display("[%t] : Python RSP: Config Read Data: 0x%08x", $realtime, response.read_data);
+        RP.tx_usrapp.TSK_TX_TYPE0_CONFIGURATION_READ(pipe_if.current_cmd.tag, pipe_if.current_cmd.address[11:0], 4'hF);
+        RP.tx_usrapp.TSK_WAIT_FOR_READ_DATA;
+        rsp_type = 8'h01;
+        read_data = RP.tx_usrapp.P_READ_DATA;
+        $display("[%t] : Python RSP: Config Read Data: 0x%08x", $realtime, read_data);
       end
       
       8'h02: begin // PCIe Configuration Write
         $display("[%t] : Python CMD: Config Write - Addr: 0x%08x, Data: 0x%08x", 
                 $realtime, pipe_if.current_cmd.address, pipe_if.current_cmd.data);
-        TSK_TX_TYPE0_CONFIGURATION_WRITE(pipe_if.current_cmd.tag, pipe_if.current_cmd.address[11:0], 
+        RP.tx_usrapp.TSK_TX_TYPE0_CONFIGURATION_WRITE(pipe_if.current_cmd.tag, pipe_if.current_cmd.address[11:0], 
                                         pipe_if.current_cmd.data, 4'hF);
-        response.rsp_type = 8'h02;
-        response.read_data = 32'h00000000;
+        rsp_type = 8'h02;
+        read_data = 32'h00000000;
       end
       
       8'h03: begin // Memory Read
         $display("[%t] : Python CMD: Memory Read - Addr: 0x%08x, Length: %d", 
                 $realtime, pipe_if.current_cmd.address, pipe_if.current_cmd.length);
-        TSK_TX_MEMORY_READ_32(pipe_if.current_cmd.tag, pipe_if.current_cmd.address, 4'hF);
-        TSK_WAIT_FOR_READ_DATA;
-        response.rsp_type = 8'h03;
-        response.read_data = P_READ_DATA;
-        $display("[%t] : Python RSP: Memory Read Data: 0x%08x", $realtime, response.read_data);
+        RP.tx_usrapp.TSK_TX_MEMORY_READ_32(pipe_if.current_cmd.tag, 3'h0, 11'd1, 
+                                          pipe_if.current_cmd.address, 4'hF, 4'hF);
+        RP.tx_usrapp.TSK_WAIT_FOR_READ_DATA;
+        rsp_type = 8'h03;
+        read_data = RP.tx_usrapp.P_READ_DATA;
+        $display("[%t] : Python RSP: Memory Read Data: 0x%08x", $realtime, read_data);
       end
       
       8'h04: begin // Memory Write
         $display("[%t] : Python CMD: Memory Write - Addr: 0x%08x, Data: 0x%08x", 
                 $realtime, pipe_if.current_cmd.address, pipe_if.current_cmd.data);
-        TSK_TX_MEMORY_WRITE_32(pipe_if.current_cmd.tag, pipe_if.current_cmd.address, 
-                              pipe_if.current_cmd.data, 4'hF);
-        response.rsp_type = 8'h04;
-        response.read_data = 32'h00000000;
+        // Set up data store for write operation
+        RP.tx_usrapp.DATA_STORE[0] = pipe_if.current_cmd.data[7:0];
+        RP.tx_usrapp.DATA_STORE[1] = pipe_if.current_cmd.data[15:8];
+        RP.tx_usrapp.DATA_STORE[2] = pipe_if.current_cmd.data[23:16];
+        RP.tx_usrapp.DATA_STORE[3] = pipe_if.current_cmd.data[31:24];
+        RP.tx_usrapp.TSK_TX_MEMORY_WRITE_32(pipe_if.current_cmd.tag, 3'h0, 11'd1, 
+                              pipe_if.current_cmd.address, 4'hF, 4'hF, 1'b0);
+        rsp_type = 8'h04;
+        read_data = 32'h00000000;
       end
       
       8'h10: begin // Get Link Status
-        response.rsp_type = 8'h10;
-        response.read_data = {26'h0, cfg_ltssm_state};
+        rsp_type = 8'h10;
+        read_data = {26'h0, cfg_ltssm_state};
         $display("[%t] : Python RSP: Link Status (LTSSM): 0x%02x", $realtime, cfg_ltssm_state);
       end
       
@@ -237,16 +277,19 @@ module board_with_pipe;
         repeat(100) @(posedge rp_sys_clk_p);
         sys_rst_n = 1'b1;
         repeat(1000) @(posedge rp_sys_clk_p);
-        TSK_SYSTEM_INITIALIZATION;
-        response.rsp_type = 8'h11;
-        response.read_data = 32'h00000000;
+        RP.tx_usrapp.TSK_SYSTEM_INITIALIZATION;
+        rsp_type = 8'h11;
+        read_data = 32'h00000000;
       end
       
       8'hFF: begin // Terminate simulation
         $display("[%t] : Python CMD: Terminate Simulation", $realtime);
-        response.rsp_type = 8'hFF;
-        response.read_data = 32'h00000000;
-        pipe_if.send_response(response);
+        rsp_type = 8'hFF;
+        read_data = 32'h00000000;
+        // Send response manually before terminating
+        $fwrite(pipe_if.rsp_pipe_fd, "%02x:%08x:%02x:%02x:%08x\n", 
+               rsp_type, read_data, tag, status, timestamp);
+        $fflush(pipe_if.rsp_pipe_fd);
         pipe_if.cleanup_pipes();
         $display("[%t] : Simulation terminated by Python command", $realtime);
         $finish;
@@ -254,14 +297,20 @@ module board_with_pipe;
       
       default: begin
         $display("[%t] : Python CMD: Unknown command type: 0x%02x", $realtime, pipe_if.current_cmd.cmd_type);
-        response.rsp_type = 8'hEE; // Error response
-        response.read_data = 32'hDEADBEEF;
-        response.status = 8'h01; // Error status
+        rsp_type = 8'hEE; // Error response
+        read_data = 32'hDEADBEEF;
+        status = 8'h01; // Error status
       end
     endcase
     
-    // Send response back to Python
-    pipe_if.send_response(response);
+    // Send response back to Python manually (avoiding struct syntax)
+    $fwrite(pipe_if.rsp_pipe_fd, "%02x:%08x:%02x:%02x:%08x\n", 
+           rsp_type, read_data, tag, status, timestamp);
+    $fflush(pipe_if.rsp_pipe_fd);
+    
+    $display("[%t] : Sent response: type=0x%02x, data=0x%08x, status=0x%02x", 
+            $realtime, rsp_type, read_data, status);
+  end
   endtask
 
   //------------------------------------------------------------------------------//
@@ -300,5 +349,6 @@ module board_with_pipe;
       `endif
     end
   end
+
 
 endmodule // board_with_pipe

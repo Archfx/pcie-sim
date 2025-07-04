@@ -57,7 +57,7 @@
 
 `include "board_common.vh"
 
-`define EXPECT_FINISH_CHECK board.RP.tx_usrapp.expect_finish_check
+`define EXPECT_FINISH_CHECK board_with_pipe.RP.tx_usrapp.expect_finish_check
 module pci_exp_usrapp_rx #(
     parameter   C_DATA_WIDTH                   = 64,
     parameter   AXISTEN_IF_RQ_ALIGNMENT_MODE   = "FALSE",
@@ -258,7 +258,7 @@ always @(posedge user_clk or negedge user_reset_n) begin
           
              if(m_axis_cq_tlast == 1'b1) begin
 
-                board.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
+                board_with_pipe.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
 
                 if (m_axis_cq_tdata[78:75] == 4'b0000) begin // Memory Read Request
                    m_axis_cq_tready <= #(Tcq) 1'b0;
@@ -283,12 +283,12 @@ always @(posedge user_clk or negedge user_reset_n) begin
              for(ii=4; ii<KEEP_WIDTH ; ii = ii +2)begin 
                 if(m_axis_cq_tkeep[ii] == 1'b1 || m_axis_cq_tkeep[ii+1] == 1'b1 )
                    // PCIe requires that payload byte enable be all valid except the first DW or last DW only
-                   board.RP.com_usrapp.TSK_READ_DATA(m_axis_cq_tlast, `RX_LOG, {m_axis_cq_tdata[(ii+1)*32-1 -:32], m_axis_cq_tdata[(ii+2)*32-1 -:32]}, ~m_axis_cq_tkeep[ii+1]);
+                   board_with_pipe.RP.com_usrapp.TSK_READ_DATA(m_axis_cq_tlast, `RX_LOG, {m_axis_cq_tdata[(ii+1)*32-1 -:32], m_axis_cq_tdata[(ii+2)*32-1 -:32]}, ~m_axis_cq_tkeep[ii+1]);
              end
           
              if(m_axis_cq_tlast == 1'b1) begin
 
-                board.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
+                board_with_pipe.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
 
                 if (m_axis_cq_tdata[78:75] == 4'b0000) begin // Memory Read Request
                    m_axis_cq_tready <= #(Tcq) 1'b0;
@@ -313,12 +313,12 @@ always @(posedge user_clk or negedge user_reset_n) begin
              for (ii=4; ii<KEEP_WIDTH ; ii = ii +2) begin 
                 if(m_axis_cq_tkeep[ii] == 1'b1 || m_axis_cq_tkeep[ii+1] == 1'b1 )
                    // PCIe requires that payload byte enable be all valid except the first DW or last DW only
-                   board.RP.com_usrapp.TSK_READ_DATA(m_axis_cq_tlast, `RX_LOG, {m_axis_cq_tdata[(ii+1)*32-1 -:32], m_axis_cq_tdata[(ii+2)*32-1 -:32]}, ~m_axis_cq_tkeep[ii+1]);
+                   board_with_pipe.RP.com_usrapp.TSK_READ_DATA(m_axis_cq_tlast, `RX_LOG, {m_axis_cq_tdata[(ii+1)*32-1 -:32], m_axis_cq_tdata[(ii+2)*32-1 -:32]}, ~m_axis_cq_tkeep[ii+1]);
              end
           
              if(m_axis_cq_tlast == 1'b1) begin
 
-                board.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
+                board_with_pipe.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
 
                 if (m_axis_cq_tdata[78:75] == 4'b0000) begin // Memory Read Request
                    $display ("[%t] : Memory Read Received! ", $realtime);
@@ -361,13 +361,13 @@ always @(posedge user_clk or negedge user_reset_n) begin
              end
              else begin // Payload data
              
-               board.RP.com_usrapp.TSK_READ_DATA(m_axis_cq_tlast, `RX_LOG, {m_axis_cq_tdata[31:0], m_axis_cq_tdata[63:32]}, ~m_axis_cq_tkeep[1]);
+               board_with_pipe.RP.com_usrapp.TSK_READ_DATA(m_axis_cq_tlast, `RX_LOG, {m_axis_cq_tdata[31:0], m_axis_cq_tdata[63:32]}, ~m_axis_cq_tkeep[1]);
                
              end
 
              if (m_axis_cq_tlast == 1'b1) begin
              
-               board.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
+               board_with_pipe.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
 
                if (m_axis_cq_tdata[14:11] == 4'b0000) begin // Memory Read Request
                   m_axis_cq_tready <= #(Tcq) 1'b0;
@@ -386,13 +386,13 @@ always @(posedge user_clk or negedge user_reset_n) begin
              
                if(m_axis_cq_tkeep[ii] == 1'b1 || m_axis_cq_tkeep[ii+1] == 1'b1 )
                    // PCIe requires that payload byte enable be all valid except the first DW or last DW only
-                   board.RP.com_usrapp.TSK_READ_DATA(m_axis_cq_tlast, `RX_LOG, {m_axis_cq_tdata[(ii+1)*32-1 -:32], m_axis_cq_tdata[(ii+2)*32-1 -:32]}, ~m_axis_cq_tkeep[ii+1]);
+                   board_with_pipe.RP.com_usrapp.TSK_READ_DATA(m_axis_cq_tlast, `RX_LOG, {m_axis_cq_tdata[(ii+1)*32-1 -:32], m_axis_cq_tdata[(ii+2)*32-1 -:32]}, ~m_axis_cq_tkeep[ii+1]);
                    
              end
              
              if (m_axis_cq_tlast  == 1'b1) begin
              
-               board.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
+               board_with_pipe.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
                cq_rx_state <= #(Tcq) `CQ_RX_IDLE;
                
              end
@@ -403,13 +403,13 @@ always @(posedge user_clk or negedge user_reset_n) begin
              for(ii=0; ii<KEEP_WIDTH ; ii = ii +2)begin 
              
                if(m_axis_cq_tkeep[ii] == 1'b1 ||m_axis_cq_tkeep[ii+1] == 1'b1 )
-                   board.RP.com_usrapp.TSK_READ_DATA(m_axis_cq_tlast, `RX_LOG, {m_axis_cq_tdata[(ii+1)*32-1 -:32], m_axis_cq_tdata[(ii+2)*32-1 -:32]}, ~m_axis_cq_tkeep[ii+1]);
+                   board_with_pipe.RP.com_usrapp.TSK_READ_DATA(m_axis_cq_tlast, `RX_LOG, {m_axis_cq_tdata[(ii+1)*32-1 -:32], m_axis_cq_tdata[(ii+2)*32-1 -:32]}, ~m_axis_cq_tkeep[ii+1]);
                    
              end           
              
              if (m_axis_cq_tlast  == 1'b1) begin
              
-               board.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
+               board_with_pipe.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
                cq_rx_state <= #(Tcq) `CQ_RX_IDLE;
                
              end
@@ -419,13 +419,13 @@ always @(posedge user_clk or negedge user_reset_n) begin
 			 for (ii=0; ii<KEEP_WIDTH ; ii = ii +2) begin 
              
                if(m_axis_cq_tkeep[ii] == 1'b1 ||m_axis_cq_tkeep[ii+1] == 1'b1 )
-                   board.RP.com_usrapp.TSK_READ_DATA(m_axis_cq_tlast, `RX_LOG, {m_axis_cq_tdata[(ii+1)*32-1 -:32], m_axis_cq_tdata[(ii+2)*32-1 -:32]}, ~m_axis_cq_tkeep[ii+1]);
+                   board_with_pipe.RP.com_usrapp.TSK_READ_DATA(m_axis_cq_tlast, `RX_LOG, {m_axis_cq_tdata[(ii+1)*32-1 -:32], m_axis_cq_tdata[(ii+2)*32-1 -:32]}, ~m_axis_cq_tkeep[ii+1]);
                    
              end
              
              if (m_axis_cq_tlast  == 1'b1) begin
              
-               board.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
+               board_with_pipe.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
                cq_rx_state <= #(Tcq) `CQ_RX_IDLE;
                
              end
@@ -495,7 +495,7 @@ always @(posedge user_clk or negedge user_reset_n) begin
              end
              
              if(m_axis_rc_tlast == 1'b1) begin
-                board.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
+                board_with_pipe.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
                 rc_rx_state <= #(Tcq) `RC_RX_IDLE;
              end else
                 rc_rx_state <= #(Tcq) `RC_RX_ACTIVE;
@@ -511,12 +511,12 @@ always @(posedge user_clk or negedge user_reset_n) begin
                 
                 for(ii=4; ii<KEEP_WIDTH ; ii = ii +2) begin // Start at 4th DW because Payload at 3th position has been added by TSK_BUILD_RC_TO_PCIE_PKT call
                    if(m_axis_rc_tkeep[ii] == 1'b1 || m_axis_rc_tkeep[ii+1] == 1'b1 )
-                      board.RP.com_usrapp.TSK_READ_DATA(m_axis_rc_tlast, `RX_LOG, {m_axis_rc_tdata[(ii+1)*32-1 -:32], m_axis_rc_tdata[(ii+2)*32-1 -:32]}, ~(m_axis_rc_tkeep[ii+1]) );
+                      board_with_pipe.RP.com_usrapp.TSK_READ_DATA(m_axis_rc_tlast, `RX_LOG, {m_axis_rc_tdata[(ii+1)*32-1 -:32], m_axis_rc_tdata[(ii+2)*32-1 -:32]}, ~(m_axis_rc_tkeep[ii+1]) );
                 end
              end
 
              if(m_axis_rc_tlast == 1'b1) begin   
-                board.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
+                board_with_pipe.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
                 rc_rx_state <= #(Tcq) `RC_RX_IDLE;
              end else
                 rc_rx_state <= #(Tcq) `RC_RX_ACTIVE;
@@ -549,13 +549,13 @@ always @(posedge user_clk or negedge user_reset_n) begin
              end
              else begin // Payload data
          
-                board.RP.com_usrapp.TSK_READ_DATA(m_axis_rc_tlast, `RX_LOG, {m_axis_rc_tdata[31:0], m_axis_rc_tdata[64:32]}, ~m_axis_rc_tkeep[1]);
+                board_with_pipe.RP.com_usrapp.TSK_READ_DATA(m_axis_rc_tlast, `RX_LOG, {m_axis_rc_tdata[31:0], m_axis_rc_tdata[64:32]}, ~m_axis_rc_tkeep[1]);
                 
              end
          
              if (m_axis_rc_tlast == 1'b1) begin
          
-                board.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
+                board_with_pipe.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
                 rc_rx_state <= #(Tcq) `RC_RX_IDLE;
                 
              end
@@ -567,13 +567,13 @@ always @(posedge user_clk or negedge user_reset_n) begin
          
                if(m_axis_rc_tkeep[ii] == 1'b1 ||m_axis_rc_tkeep[ii+1] == 1'b1 )
                    // PCIe requires that payload byte enable be all valid except the first DW or last DW only
-                   board.RP.com_usrapp.TSK_READ_DATA(m_axis_rc_tlast, `RX_LOG,{m_axis_rc_tdata[(ii+1)*32-1 -:32], m_axis_rc_tdata[(ii+2)*32-1 -:32]}, ~m_axis_rc_tkeep[ii+1] );
+                   board_with_pipe.RP.com_usrapp.TSK_READ_DATA(m_axis_rc_tlast, `RX_LOG,{m_axis_rc_tdata[(ii+1)*32-1 -:32], m_axis_rc_tdata[(ii+2)*32-1 -:32]}, ~m_axis_rc_tkeep[ii+1] );
 
              end
 
              if (m_axis_rc_tlast == 1'b1) begin
          
-               board.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
+               board_with_pipe.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
                rc_rx_state <= #(Tcq) `RC_RX_IDLE;
             
              end
@@ -584,13 +584,13 @@ always @(posedge user_clk or negedge user_reset_n) begin
              for(ii=0; ii<KEEP_WIDTH ; ii = ii +2) begin
          
              if(m_axis_rc_tkeep[ii] == 1'b1 || m_axis_rc_tkeep[ii+1] == 1'b1 )
-               board.RP.com_usrapp.TSK_READ_DATA(m_axis_rc_tlast, `RX_LOG, {m_axis_rc_tdata[(ii+1)*32-1 -:32], m_axis_rc_tdata[(ii+2)*32-1 -:32]}, ~(m_axis_rc_tkeep[ii+1]) );
+               board_with_pipe.RP.com_usrapp.TSK_READ_DATA(m_axis_rc_tlast, `RX_LOG, {m_axis_rc_tdata[(ii+1)*32-1 -:32], m_axis_rc_tdata[(ii+2)*32-1 -:32]}, ~(m_axis_rc_tkeep[ii+1]) );
 
              end
          
              if (m_axis_rc_tlast == 1'b1) begin
          
-                board.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
+                board_with_pipe.RP.com_usrapp.TSK_PARSE_FRAME(`RX_LOG);
                 rc_rx_state <= #(Tcq) `RC_RX_IDLE;
             
              end
@@ -652,8 +652,8 @@ task TSK_BUILD_RC_TO_PCIE_PKT;
                            rc_data_QW0[6:0],
                            rc_data_QW1[63:32]
                          };
-    board.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[127:64], 1'b0);
-    board.RP.com_usrapp.TSK_READ_DATA(1, `RX_LOG, pcie_pkt[63:0], 1'b0);
+    board_with_pipe.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[127:64], 1'b0);
+    board_with_pipe.RP.com_usrapp.TSK_READ_DATA(1, `RX_LOG, pcie_pkt[63:0], 1'b0);
     
   end
   else begin
@@ -684,8 +684,8 @@ task TSK_BUILD_RC_TO_PCIE_PKT;
                            rc_data_QW0[6:0],
                            32'h00000000
                           };
-    board.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[127:64], 1'b0);
-    board.RP.com_usrapp.TSK_READ_DATA(1, `RX_LOG, pcie_pkt[63:0], 1'b1);
+    board_with_pipe.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[127:64], 1'b0);
+    board_with_pipe.RP.com_usrapp.TSK_READ_DATA(1, `RX_LOG, pcie_pkt[63:0], 1'b1);
     
   end
 endtask
@@ -724,8 +724,8 @@ begin
                  ((cq_data[63:32] == 32'h0) ? {cq_data[31:2], 32'b0} : cq_data[63:2]), // Address (32-bit or 64-bit)
                  2'b00                   // *Reserved*
                 };
-     board.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[127:64], 1'b0);
-     board.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[63:0], 1'b0);     
+     board_with_pipe.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[127:64], 1'b0);
+     board_with_pipe.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[63:0], 1'b0);     
 
   end
 //----------------------------------------------------------------------------------------------------//
@@ -750,8 +750,8 @@ begin
                  ((cq_data[63:32] == 32'h0) ? {cq_data[31:2], 32'b0} : cq_data[63:2]), // Address (32-bit or 64-bit)
                  2'b00                   // *Reserved*
                 }; /* Only provide header -- Payload data is not presented */
-     board.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[127:64], 1'b0);
-     board.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[63:0], 1'b0);
+     board_with_pipe.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[127:64], 1'b0);
+     board_with_pipe.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[63:0], 1'b0);
 
   end
 //----------------------------------------------------------------------------------------------------//
@@ -777,8 +777,8 @@ begin
                  cq_data[31:16],         // Vendor ID
                  cq_data[63:32]          // Vendor Message
                 };
-     board.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[127:64], 1'b0);
-     board.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[63:0], 1'b0);
+     board_with_pipe.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[127:64], 1'b0);
+     board_with_pipe.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[63:0], 1'b0);
    
   end
 //----------------------------------------------------------------------------------------------------//
@@ -802,8 +802,8 @@ begin
                  m_axis_cq_tdata[47:40], // Message Code
                  cq_data[63:0]           // Messages (ATS or non-Vendor Defined)
                 };
-     board.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[127:64], 1'b0);
-     board.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[63:0], 1'b0);
+     board_with_pipe.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[127:64], 1'b0);
+     board_with_pipe.RP.com_usrapp.TSK_READ_DATA(0, `RX_LOG, pcie_pkt[63:0], 1'b0);
    
   end
   endcase
@@ -866,7 +866,7 @@ task TSK_BUILD_CPLD_PKT;
   
   //----------------------------------------------------------------------------------------------------//
 
-    board.RP.tx_usrapp.TSK_TX_COMPLETION_DATA(m_axis_cq_tdata[31:16],
+    board_with_pipe.RP.tx_usrapp.TSK_TX_COMPLETION_DATA(m_axis_cq_tdata[31:16],
                                               m_axis_cq_tdata[39:32],
                                               m_axis_cq_tdata[59:57],
                                               m_axis_cq_tdata[10:0],

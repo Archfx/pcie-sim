@@ -92,9 +92,9 @@ begin
     // BusMstr in the command register
     //--------------------------------------------------------------------------
 
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(32'h00000001);
-    board.RP.cfg_usrapp.TSK_WRITE_CFG_DW(32'h00000001, 32'h00000007, 4'b1110);
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(32'h00000001);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(32'h00000001);
+    board_with_pipe.RP.cfg_usrapp.TSK_WRITE_CFG_DW(32'h00000001, 32'h00000007, 4'b1110);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(32'h00000001);
     
 
   $finish;
@@ -140,17 +140,17 @@ fork
     @(posedge pcie_rq_tag_vld);
     exp_tag = pcie_rq_tag;
 
-    board.RP.com_usrapp.TSK_EXPECT_CPLD(
+    board_with_pipe.RP.com_usrapp.TSK_EXPECT_CPLD(
       3'h0, //traffic_class;
       1'b0, //td;
       1'b0, //ep;
       2'h0, //attr;
       10'h1, //length;
-      board.RP.tx_usrapp.EP_BUS_DEV_FNS, //completer_id;
+      board_with_pipe.RP.tx_usrapp.EP_BUS_DEV_FNS, //completer_id;
       3'h0, //completion_status;
       1'b0, //bcm;
       12'h4, //byte_count;
-      board.RP.tx_usrapp.RP_BUS_DEV_FNS, //requester_id;
+      board_with_pipe.RP.tx_usrapp.RP_BUS_DEV_FNS, //requester_id;
       exp_tag ,
       7'b0, //address_low;
       expect_status //expect_status;
@@ -174,9 +174,9 @@ join
     // BusMstr in the command register
     //--------------------------------------------------------------------------
 
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(32'h00000001);
-    board.RP.cfg_usrapp.TSK_WRITE_CFG_DW(32'h00000001, 32'h00000007, 4'b1110);
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(32'h00000001);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(32'h00000001);
+    board_with_pipe.RP.cfg_usrapp.TSK_WRITE_CFG_DW(32'h00000001, 32'h00000007, 4'b1110);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(32'h00000001);
 
   end
 
@@ -187,52 +187,52 @@ begin
 
     // This test performs a 32 bit write to a 32 bit Memory space and performs a read back
 
-    board.RP.tx_usrapp.TSK_SIMULATION_TIMEOUT(10050);
+    board_with_pipe.RP.tx_usrapp.TSK_SIMULATION_TIMEOUT(10050);
 
-    board.RP.tx_usrapp.TSK_SYSTEM_INITIALIZATION;
+    board_with_pipe.RP.tx_usrapp.TSK_SYSTEM_INITIALIZATION;
 
-    board.RP.tx_usrapp.TSK_BAR_INIT;
+    board_with_pipe.RP.tx_usrapp.TSK_BAR_INIT;
         
     //--------------------------------------------------------------------------
     // Direct Root Port to allow upstream traffic by enabling Mem, I/O and
     // BusMstr in the command register
     //--------------------------------------------------------------------------
 
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(32'h00000001);
-    board.RP.cfg_usrapp.TSK_WRITE_CFG_DW(32'h00000001, 32'h00000007, 4'b1110);
-    board.RP.cfg_usrapp.TSK_READ_CFG_DW(32'h00000001);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(32'h00000001);
+    board_with_pipe.RP.cfg_usrapp.TSK_WRITE_CFG_DW(32'h00000001, 32'h00000007, 4'b1110);
+    board_with_pipe.RP.cfg_usrapp.TSK_READ_CFG_DW(32'h00000001);
 
 //--------------------------------------------------------------------------
 // Event : Testing BARs
 //--------------------------------------------------------------------------
 
-        for (board.RP.tx_usrapp.ii = 0; board.RP.tx_usrapp.ii <= 6; board.RP.tx_usrapp.ii =
-            board.RP.tx_usrapp.ii + 1) begin
-            if (board.RP.tx_usrapp.BAR_INIT_P_BAR_ENABLED[board.RP.tx_usrapp.ii] > 2'b00) // bar is enabled
-               case(board.RP.tx_usrapp.BAR_INIT_P_BAR_ENABLED[board.RP.tx_usrapp.ii])
+        for (board_with_pipe.RP.tx_usrapp.ii = 0; board_with_pipe.RP.tx_usrapp.ii <= 6; board_with_pipe.RP.tx_usrapp.ii =
+            board_with_pipe.RP.tx_usrapp.ii + 1) begin
+            if (board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR_ENABLED[board_with_pipe.RP.tx_usrapp.ii] > 2'b00) // bar is enabled
+               case(board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR_ENABLED[board_with_pipe.RP.tx_usrapp.ii])
                    2'b01 : // IO SPACE
                         begin
 
-                          $display("[%t] : Transmitting TLPs to IO Space BAR %x", $realtime, board.RP.tx_usrapp.ii);
+                          $display("[%t] : Transmitting TLPs to IO Space BAR %x", $realtime, board_with_pipe.RP.tx_usrapp.ii);
 
                           //--------------------------------------------------------------------------
                           // Event : IO Write bit TLP
                           //--------------------------------------------------------------------------
 
 
-                          board.RP.tx_usrapp.TSK_TX_IO_WRITE(board.RP.tx_usrapp.DEFAULT_TAG,
-                             board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0], 4'hF, 32'hdead_beef);
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_IO_WRITE(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                             board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0], 4'hF, 32'hdead_beef);
                              @(posedge pcie_rq_tag_vld);
                              exp_tag = pcie_rq_tag;
 
 
-                          board.RP.com_usrapp.TSK_EXPECT_CPL(3'h0, 1'b0, 1'b0, 2'b0,
-                             board.RP.tx_usrapp.EP_BUS_DEV_FNS, 3'h0, 1'b0, 12'h4,
-                             board.RP.tx_usrapp.RP_BUS_DEV_FNS, exp_tag,
-                             board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0], test_vars[0]);
+                          board_with_pipe.RP.com_usrapp.TSK_EXPECT_CPL(3'h0, 1'b0, 1'b0, 2'b0,
+                             board_with_pipe.RP.tx_usrapp.EP_BUS_DEV_FNS, 3'h0, 1'b0, 12'h4,
+                             board_with_pipe.RP.tx_usrapp.RP_BUS_DEV_FNS, exp_tag,
+                             board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0], test_vars[0]);
 
-                          board.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
-                          board.RP.tx_usrapp.DEFAULT_TAG = board.RP.tx_usrapp.DEFAULT_TAG + 1;
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
+                          board_with_pipe.RP.tx_usrapp.DEFAULT_TAG = board_with_pipe.RP.tx_usrapp.DEFAULT_TAG + 1;
 
                           //--------------------------------------------------------------------------
                           // Event : IO Read bit TLP
@@ -240,27 +240,27 @@ begin
 
 
                           // make sure P_READ_DATA has known initial value
-                          board.RP.tx_usrapp.P_READ_DATA = 32'hffff_ffff;
+                          board_with_pipe.RP.tx_usrapp.P_READ_DATA = 32'hffff_ffff;
                           fork
-                             board.RP.tx_usrapp.TSK_TX_IO_READ(board.RP.tx_usrapp.DEFAULT_TAG,
-                                board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0], 4'hF);
-                             board.RP.tx_usrapp.TSK_WAIT_FOR_READ_DATA;
+                             board_with_pipe.RP.tx_usrapp.TSK_TX_IO_READ(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0], 4'hF);
+                             board_with_pipe.RP.tx_usrapp.TSK_WAIT_FOR_READ_DATA;
                           join
-                          if  (board.RP.tx_usrapp.P_READ_DATA != 32'hdead_beef)
+                          if  (board_with_pipe.RP.tx_usrapp.P_READ_DATA != 32'hdead_beef)
                              begin
                                testError=1'b1;
                                $display("[%t] : Test FAILED --- Data Error Mismatch, Write Data %x != Read Data %x",
-                                   $realtime, 32'hdead_beef, board.RP.tx_usrapp.P_READ_DATA);
+                                   $realtime, 32'hdead_beef, board_with_pipe.RP.tx_usrapp.P_READ_DATA);
                              end
                           else
                              begin
                                $display("[%t] : Test PASS --- Write Data: %x successfully received",
-                                   $realtime, board.RP.tx_usrapp.P_READ_DATA);
+                                   $realtime, board_with_pipe.RP.tx_usrapp.P_READ_DATA);
                              end
 
 
-                          board.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
-                          board.RP.tx_usrapp.DEFAULT_TAG = board.RP.tx_usrapp.DEFAULT_TAG + 1;
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
+                          board_with_pipe.RP.tx_usrapp.DEFAULT_TAG = board_with_pipe.RP.tx_usrapp.DEFAULT_TAG + 1;
 
 
                         end
@@ -272,27 +272,27 @@ begin
 // PIO_READWRITE_TEST CASE for C_AXIS_WIDTH == 64 
 
 //$display("[%t] : Transmitting TLPs to Memory 32 Space BAR %x at address %x", $realtime,
-                          //    board.RP.tx_usrapp.ii, board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0]+8'h10+(board.RP.tx_usrapp.ii*8'h20));
+                          //    board_with_pipe.RP.tx_usrapp.ii, board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0]+8'h10+(board_with_pipe.RP.tx_usrapp.ii*8'h20));
                           $display("[%t] : Transmitting TLPs to Memory 32 Space BAR %x", $realtime,
-                              board.RP.tx_usrapp.ii);
+                              board_with_pipe.RP.tx_usrapp.ii);
 
                           //--------------------------------------------------------------------------
                           // Event : Memory Write 32 bit TLP
                           //--------------------------------------------------------------------------
 
 
-                          board.RP.tx_usrapp.DATA_STORE[0] = {board.RP.tx_usrapp.ii,4'h4};//8'h04;
-                          board.RP.tx_usrapp.DATA_STORE[1] = {board.RP.tx_usrapp.ii,4'h3};//8'h03;
-                          board.RP.tx_usrapp.DATA_STORE[2] = {board.RP.tx_usrapp.ii,4'h2};//8'h02;
-                          board.RP.tx_usrapp.DATA_STORE[3] = {board.RP.tx_usrapp.ii,4'h1};//8'h01;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[0] = {board_with_pipe.RP.tx_usrapp.ii,4'h4};//8'h04;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[1] = {board_with_pipe.RP.tx_usrapp.ii,4'h3};//8'h03;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[2] = {board_with_pipe.RP.tx_usrapp.ii,4'h2};//8'h02;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[3] = {board_with_pipe.RP.tx_usrapp.ii,4'h1};//8'h01;
                           
                           // Default 1DW PIO
-                          board.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_32(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                                    board.RP.tx_usrapp.DEFAULT_TC, 11'd1,
-                                                                    board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0]+8'h10+(board.RP.tx_usrapp.ii*8'h40),
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_32(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                                    board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 11'd1,
+                                                                    board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0]+8'h10+(board_with_pipe.RP.tx_usrapp.ii*8'h40),
                                                                     4'h0, 4'hF, 1'b0);
-                          board.RP.tx_usrapp.TSK_TX_CLK_EAT(100);
-                          board.RP.tx_usrapp.DEFAULT_TAG = board.RP.tx_usrapp.DEFAULT_TAG + 1;
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_CLK_EAT(100);
+                          board_with_pipe.RP.tx_usrapp.DEFAULT_TAG = board_with_pipe.RP.tx_usrapp.DEFAULT_TAG + 1;
 
                           //--------------------------------------------------------------------------
                           // Event : Memory Read 32 bit TLP
@@ -300,145 +300,145 @@ begin
 
 
                           // make sure P_READ_DATA has known initial value
-                          board.RP.tx_usrapp.P_READ_DATA = 32'hffff_ffff;
+                          board_with_pipe.RP.tx_usrapp.P_READ_DATA = 32'hffff_ffff;
                           
                           // Default 1DW PIO
                           fork
-                             board.RP.tx_usrapp.TSK_TX_MEMORY_READ_32(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                                      board.RP.tx_usrapp.DEFAULT_TC, 11'd1,
-                                                                      board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0]+8'h10+(board.RP.tx_usrapp.ii*8'h40),
+                             board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_READ_32(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                                      board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 11'd1,
+                                                                      board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0]+8'h10+(board_with_pipe.RP.tx_usrapp.ii*8'h40),
                                                                       4'h0, 4'hF);
-                             board.RP.tx_usrapp.TSK_WAIT_FOR_READ_DATA;
+                             board_with_pipe.RP.tx_usrapp.TSK_WAIT_FOR_READ_DATA;
                           join
 
-                          if  (board.RP.tx_usrapp.P_READ_DATA != {board.RP.tx_usrapp.DATA_STORE[3],
-                                                                  board.RP.tx_usrapp.DATA_STORE[2],
-                                                                  board.RP.tx_usrapp.DATA_STORE[1],
-                                                                  board.RP.tx_usrapp.DATA_STORE[0] })
+                          if  (board_with_pipe.RP.tx_usrapp.P_READ_DATA != {board_with_pipe.RP.tx_usrapp.DATA_STORE[3],
+                                                                  board_with_pipe.RP.tx_usrapp.DATA_STORE[2],
+                                                                  board_with_pipe.RP.tx_usrapp.DATA_STORE[1],
+                                                                  board_with_pipe.RP.tx_usrapp.DATA_STORE[0] })
                           begin
                              testError=1'b1;
                              $display("[%t] : Test FAIL --- Data Error Mismatch, Write Data %x != Read Data %x",
-                                      $realtime, {board.RP.tx_usrapp.DATA_STORE[3],board.RP.tx_usrapp.DATA_STORE[2],
-                                                  board.RP.tx_usrapp.DATA_STORE[1],board.RP.tx_usrapp.DATA_STORE[0]},
-                                      board.RP.tx_usrapp.P_READ_DATA);
+                                      $realtime, {board_with_pipe.RP.tx_usrapp.DATA_STORE[3],board_with_pipe.RP.tx_usrapp.DATA_STORE[2],
+                                                  board_with_pipe.RP.tx_usrapp.DATA_STORE[1],board_with_pipe.RP.tx_usrapp.DATA_STORE[0]},
+                                      board_with_pipe.RP.tx_usrapp.P_READ_DATA);
 
                           end
                           else begin
                              $display("[%t] : Test PASS --- 1DW Write Data: %x successfully received",
-                                      $realtime, board.RP.tx_usrapp.P_READ_DATA);
+                                      $realtime, board_with_pipe.RP.tx_usrapp.P_READ_DATA);
                           end
 
-                          board.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
-                          board.RP.tx_usrapp.DEFAULT_TAG = board.RP.tx_usrapp.DEFAULT_TAG + 1;
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
+                          board_with_pipe.RP.tx_usrapp.DEFAULT_TAG = board_with_pipe.RP.tx_usrapp.DEFAULT_TAG + 1;
 
                           // Optional 2DW PIO
-                          board.RP.tx_usrapp.DATA_STORE[0] = {board.RP.tx_usrapp.ii+4'hA,4'h4};//8'h04;
-                          board.RP.tx_usrapp.DATA_STORE[1] = {board.RP.tx_usrapp.ii+4'hA,4'h3};//8'h03;
-                          board.RP.tx_usrapp.DATA_STORE[2] = {board.RP.tx_usrapp.ii+4'hA,4'h2};//8'h02;
-                          board.RP.tx_usrapp.DATA_STORE[3] = {board.RP.tx_usrapp.ii+4'hA,4'h1};//8'h01;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[0] = {board_with_pipe.RP.tx_usrapp.ii+4'hA,4'h4};//8'h04;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[1] = {board_with_pipe.RP.tx_usrapp.ii+4'hA,4'h3};//8'h03;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[2] = {board_with_pipe.RP.tx_usrapp.ii+4'hA,4'h2};//8'h02;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[3] = {board_with_pipe.RP.tx_usrapp.ii+4'hA,4'h1};//8'h01;
                           
                                                     
-                          board.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_32(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                                    board.RP.tx_usrapp.DEFAULT_TC, 11'd2,
-                                                                    board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0]+8'h14+(board.RP.tx_usrapp.ii*8'h40),
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_32(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                                    board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 11'd2,
+                                                                    board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0]+8'h14+(board_with_pipe.RP.tx_usrapp.ii*8'h40),
                                                                     4'hF, 4'hF, 1'b0);
-                          board.RP.tx_usrapp.TSK_TX_CLK_EAT(100);
-                          board.RP.tx_usrapp.DEFAULT_TAG = board.RP.tx_usrapp.DEFAULT_TAG + 1;                   
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_CLK_EAT(100);
+                          board_with_pipe.RP.tx_usrapp.DEFAULT_TAG = board_with_pipe.RP.tx_usrapp.DEFAULT_TAG + 1;                   
                           
  
                           fork
-                             board.RP.tx_usrapp.TSK_TX_MEMORY_READ_32(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                                      board.RP.tx_usrapp.DEFAULT_TC, 11'd2,
-                                                                      board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0]+8'h14+(board.RP.tx_usrapp.ii*8'h40),
+                             board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_READ_32(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                                      board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 11'd2,
+                                                                      board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0]+8'h14+(board_with_pipe.RP.tx_usrapp.ii*8'h40),
                                                                       4'hF, 4'hF);
-                             board.RP.tx_usrapp.TSK_WAIT_FOR_READ_DATA;
+                             board_with_pipe.RP.tx_usrapp.TSK_WAIT_FOR_READ_DATA;
                           join
-                          if  ( (board.RP.tx_usrapp.P_READ_DATA   != {board.RP.tx_usrapp.DATA_STORE[3],
-                                                                      board.RP.tx_usrapp.DATA_STORE[2],
-                                                                      board.RP.tx_usrapp.DATA_STORE[1],
-                                                                      board.RP.tx_usrapp.DATA_STORE[0] })
+                          if  ( (board_with_pipe.RP.tx_usrapp.P_READ_DATA   != {board_with_pipe.RP.tx_usrapp.DATA_STORE[3],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[2],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[1],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[0] })
                                  ||
-                                (board.RP.tx_usrapp.P_READ_DATA_2 != {board.RP.tx_usrapp.DATA_STORE[3],
-                                                                      board.RP.tx_usrapp.DATA_STORE[2],
-                                                                      board.RP.tx_usrapp.DATA_STORE[1],
-                                                                      board.RP.tx_usrapp.DATA_STORE[0] }) )
+                                (board_with_pipe.RP.tx_usrapp.P_READ_DATA_2 != {board_with_pipe.RP.tx_usrapp.DATA_STORE[3],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[2],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[1],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[0] }) )
                           begin
                              testError=1'b1;
                              $display("[%t] : Test FAIL --- Data Error Mismatch, Write Data %x != Read Data %x",
-                                       $realtime, {board.RP.tx_usrapp.DATA_STORE[3],board.RP.tx_usrapp.DATA_STORE[2],
-                                                   board.RP.tx_usrapp.DATA_STORE[1],board.RP.tx_usrapp.DATA_STORE[0],
-                                                   board.RP.tx_usrapp.DATA_STORE[3],board.RP.tx_usrapp.DATA_STORE[2],
-                                                   board.RP.tx_usrapp.DATA_STORE[1],board.RP.tx_usrapp.DATA_STORE[0]},
-                                                   {board.RP.tx_usrapp.P_READ_DATA,board.RP.tx_usrapp.P_READ_DATA_2});
+                                       $realtime, {board_with_pipe.RP.tx_usrapp.DATA_STORE[3],board_with_pipe.RP.tx_usrapp.DATA_STORE[2],
+                                                   board_with_pipe.RP.tx_usrapp.DATA_STORE[1],board_with_pipe.RP.tx_usrapp.DATA_STORE[0],
+                                                   board_with_pipe.RP.tx_usrapp.DATA_STORE[3],board_with_pipe.RP.tx_usrapp.DATA_STORE[2],
+                                                   board_with_pipe.RP.tx_usrapp.DATA_STORE[1],board_with_pipe.RP.tx_usrapp.DATA_STORE[0]},
+                                                   {board_with_pipe.RP.tx_usrapp.P_READ_DATA,board_with_pipe.RP.tx_usrapp.P_READ_DATA_2});
 
                           end
                           else begin
                              $display("[%t] : Test PASS --- 2DW Write Data: %x successfully received",
-                                      $realtime, {board.RP.tx_usrapp.P_READ_DATA,board.RP.tx_usrapp.P_READ_DATA_2});
+                                      $realtime, {board_with_pipe.RP.tx_usrapp.P_READ_DATA,board_with_pipe.RP.tx_usrapp.P_READ_DATA_2});
                           end
 
-                          board.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
-                          board.RP.tx_usrapp.DEFAULT_TAG = board.RP.tx_usrapp.DEFAULT_TAG + 1;
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
+                          board_with_pipe.RP.tx_usrapp.DEFAULT_TAG = board_with_pipe.RP.tx_usrapp.DEFAULT_TAG + 1;
 
 			  // Optional 192 DW PIO
-                          board.RP.tx_usrapp.DATA_STORE[0] = {board.RP.tx_usrapp.ii+4'hB,4'h4};//8'hB4;
-                          board.RP.tx_usrapp.DATA_STORE[1] = {board.RP.tx_usrapp.ii+4'hB,4'h3};//8'hB3;
-                          board.RP.tx_usrapp.DATA_STORE[2] = {board.RP.tx_usrapp.ii+4'hB,4'h2};//8'hB2;
-                          board.RP.tx_usrapp.DATA_STORE[3] = {board.RP.tx_usrapp.ii+4'hB,4'h1};//8'hB1;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[0] = {board_with_pipe.RP.tx_usrapp.ii+4'hB,4'h4};//8'hB4;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[1] = {board_with_pipe.RP.tx_usrapp.ii+4'hB,4'h3};//8'hB3;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[2] = {board_with_pipe.RP.tx_usrapp.ii+4'hB,4'h2};//8'hB2;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[3] = {board_with_pipe.RP.tx_usrapp.ii+4'hB,4'h1};//8'hB1;
                                                   
-                          /*board.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_32(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                                    board.RP.tx_usrapp.DEFAULT_TC, 11'd100,
-                                                                    board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0]+8'h20+(board.RP.tx_usrapp.ii*8'h40),
+                          /*board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_32(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                                    board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 11'd100,
+                                                                    board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0]+8'h20+(board_with_pipe.RP.tx_usrapp.ii*8'h40),
                                                                     4'hF, 4'hF, 1'b0);*/
-                          board.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_32(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                                    board.RP.tx_usrapp.DEFAULT_TC, 
-                                                                    board.RP.tx_usrapp.dw_length,
-                                                                    board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0]+8'h20+(board.RP.tx_usrapp.ii*8'h40),
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_32(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                                    board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 
+                                                                    board_with_pipe.RP.tx_usrapp.dw_length,
+                                                                    board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0]+8'h20+(board_with_pipe.RP.tx_usrapp.ii*8'h40),
                                                                     4'hF, 4'hF, 1'b0);
-                          board.RP.tx_usrapp.TSK_TX_CLK_EAT(100);
-                          board.RP.tx_usrapp.DEFAULT_TAG = board.RP.tx_usrapp.DEFAULT_TAG + 1;                   
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_CLK_EAT(100);
+                          board_with_pipe.RP.tx_usrapp.DEFAULT_TAG = board_with_pipe.RP.tx_usrapp.DEFAULT_TAG + 1;                   
                           
  
                           fork
-                             /*board.RP.tx_usrapp.TSK_TX_MEMORY_READ_32(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                                      board.RP.tx_usrapp.DEFAULT_TC, 11'd100,
-                                                                      board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0]+8'h20+(board.RP.tx_usrapp.ii*8'h40),
+                             /*board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_READ_32(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                                      board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 11'd100,
+                                                                      board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0]+8'h20+(board_with_pipe.RP.tx_usrapp.ii*8'h40),
                                                                       4'hF, 4'hF);*/
                               
-                             board.RP.tx_usrapp.TSK_TX_MEMORY_READ_32(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                                      board.RP.tx_usrapp.DEFAULT_TC, 
-                                                                      board.RP.tx_usrapp.dw_length,
-                                                                      board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0]+8'h20+(board.RP.tx_usrapp.ii*8'h40),
+                             board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_READ_32(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                                      board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 
+                                                                      board_with_pipe.RP.tx_usrapp.dw_length,
+                                                                      board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0]+8'h20+(board_with_pipe.RP.tx_usrapp.ii*8'h40),
                                                                       4'hF, 4'hF); 
-                             board.RP.tx_usrapp.TSK_WAIT_FOR_READ_DATA;
+                             board_with_pipe.RP.tx_usrapp.TSK_WAIT_FOR_READ_DATA;
                           join
-                          if  ( (board.RP.tx_usrapp.P_READ_DATA   != {board.RP.tx_usrapp.DATA_STORE[3],
-                                                                      board.RP.tx_usrapp.DATA_STORE[2],
-                                                                      board.RP.tx_usrapp.DATA_STORE[1],
-                                                                      board.RP.tx_usrapp.DATA_STORE[0] })
+                          if  ( (board_with_pipe.RP.tx_usrapp.P_READ_DATA   != {board_with_pipe.RP.tx_usrapp.DATA_STORE[3],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[2],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[1],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[0] })
                                  ||
-                                (board.RP.tx_usrapp.P_READ_DATA_2 != {board.RP.tx_usrapp.DATA_STORE[3],
-                                                                      board.RP.tx_usrapp.DATA_STORE[2],
-                                                                      board.RP.tx_usrapp.DATA_STORE[1],
-                                                                      board.RP.tx_usrapp.DATA_STORE[0] }) )
+                                (board_with_pipe.RP.tx_usrapp.P_READ_DATA_2 != {board_with_pipe.RP.tx_usrapp.DATA_STORE[3],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[2],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[1],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[0] }) )
                           begin
                              testError=1'b1;
                              $display("[%t] : Test FAIL --- Data Error Mismatch, Write Data %x != Read Data %x",
-                                       $realtime, {board.RP.tx_usrapp.DATA_STORE[3],board.RP.tx_usrapp.DATA_STORE[2],
-                                                   board.RP.tx_usrapp.DATA_STORE[1],board.RP.tx_usrapp.DATA_STORE[0],
-                                                   board.RP.tx_usrapp.DATA_STORE[3],board.RP.tx_usrapp.DATA_STORE[2],
-                                                   board.RP.tx_usrapp.DATA_STORE[1],board.RP.tx_usrapp.DATA_STORE[0]},
-                                                   {board.RP.tx_usrapp.P_READ_DATA,board.RP.tx_usrapp.P_READ_DATA_2});
+                                       $realtime, {board_with_pipe.RP.tx_usrapp.DATA_STORE[3],board_with_pipe.RP.tx_usrapp.DATA_STORE[2],
+                                                   board_with_pipe.RP.tx_usrapp.DATA_STORE[1],board_with_pipe.RP.tx_usrapp.DATA_STORE[0],
+                                                   board_with_pipe.RP.tx_usrapp.DATA_STORE[3],board_with_pipe.RP.tx_usrapp.DATA_STORE[2],
+                                                   board_with_pipe.RP.tx_usrapp.DATA_STORE[1],board_with_pipe.RP.tx_usrapp.DATA_STORE[0]},
+                                                   {board_with_pipe.RP.tx_usrapp.P_READ_DATA,board_with_pipe.RP.tx_usrapp.P_READ_DATA_2});
 
                           end
                           else begin
                              //$display("[%t] : Test PASS --- 192 DW Write Data: %x successfully received",
                              $display("[%t] : Test PASS --- %d DW Write Data: %x successfully received",
-                                      $realtime, {board.RP.tx_usrapp.dw_length}, {board.RP.tx_usrapp.P_READ_DATA,board.RP.tx_usrapp.P_READ_DATA_2});
+                                      $realtime, {board_with_pipe.RP.tx_usrapp.dw_length}, {board_with_pipe.RP.tx_usrapp.P_READ_DATA,board_with_pipe.RP.tx_usrapp.P_READ_DATA_2});
                           end
 
-                          board.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
-                          board.RP.tx_usrapp.DEFAULT_TAG = board.RP.tx_usrapp.DEFAULT_TAG + 1; 
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
+                          board_with_pipe.RP.tx_usrapp.DEFAULT_TAG = board_with_pipe.RP.tx_usrapp.DEFAULT_TAG + 1; 
 
 	
 
@@ -453,9 +453,9 @@ begin
 
 
                           //$display("[%t] : Transmitting TLPs to Memory 64 Space BAR %x at address %x", $realtime,
-                          //    board.RP.tx_usrapp.ii, board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0]+8'h20+(board.RP.tx_usrapp.ii*8'h20));
+                          //    board_with_pipe.RP.tx_usrapp.ii, board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0]+8'h20+(board_with_pipe.RP.tx_usrapp.ii*8'h20));
                           $display("[%t] : Transmitting TLPs to Memory 64 Space BAR %x", $realtime,
-                              board.RP.tx_usrapp.ii);
+                              board_with_pipe.RP.tx_usrapp.ii);
 
 
                           //--------------------------------------------------------------------------
@@ -463,23 +463,23 @@ begin
                           //--------------------------------------------------------------------------
 
 
-                          board.RP.tx_usrapp.DATA_STORE[0] = {board.RP.tx_usrapp.ii+6,4'h4};//8'h64;
-                          board.RP.tx_usrapp.DATA_STORE[1] = {board.RP.tx_usrapp.ii+6,4'h3};//8'h63;
-                          board.RP.tx_usrapp.DATA_STORE[2] = {board.RP.tx_usrapp.ii+6,4'h2};//8'h62;
-                          board.RP.tx_usrapp.DATA_STORE[3] = {board.RP.tx_usrapp.ii+6,4'h1};//8'h61;
-                          board.RP.tx_usrapp.DATA_STORE[4] = {board.RP.tx_usrapp.ii+6,4'h8};//8'h74;
-                          board.RP.tx_usrapp.DATA_STORE[5] = {board.RP.tx_usrapp.ii+6,4'h7};//8'h73;
-                          board.RP.tx_usrapp.DATA_STORE[6] = {board.RP.tx_usrapp.ii+6,4'h6};//8'h72;
-                          board.RP.tx_usrapp.DATA_STORE[7] = {board.RP.tx_usrapp.ii+6,4'h5};//8'h71;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[0] = {board_with_pipe.RP.tx_usrapp.ii+6,4'h4};//8'h64;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[1] = {board_with_pipe.RP.tx_usrapp.ii+6,4'h3};//8'h63;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[2] = {board_with_pipe.RP.tx_usrapp.ii+6,4'h2};//8'h62;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[3] = {board_with_pipe.RP.tx_usrapp.ii+6,4'h1};//8'h61;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[4] = {board_with_pipe.RP.tx_usrapp.ii+6,4'h8};//8'h74;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[5] = {board_with_pipe.RP.tx_usrapp.ii+6,4'h7};//8'h73;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[6] = {board_with_pipe.RP.tx_usrapp.ii+6,4'h6};//8'h72;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[7] = {board_with_pipe.RP.tx_usrapp.ii+6,4'h5};//8'h71;
 
                           // Default 1DW PIO
-                          board.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_64(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                                    board.RP.tx_usrapp.DEFAULT_TC, 10'd1,
-                                                                   {board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii+1][31:0],
-                                                                    board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0]+8'h20+(board.RP.tx_usrapp.ii*8'h20)},
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_64(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                                    board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 10'd1,
+                                                                   {board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii+1][31:0],
+                                                                    board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0]+8'h20+(board_with_pipe.RP.tx_usrapp.ii*8'h20)},
                                                                     4'h0, 4'hF, 1'b0);
-                          board.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
-                          board.RP.tx_usrapp.DEFAULT_TAG = board.RP.tx_usrapp.DEFAULT_TAG + 1;
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
+                          board_with_pipe.RP.tx_usrapp.DEFAULT_TAG = board_with_pipe.RP.tx_usrapp.DEFAULT_TAG + 1;
 
                           //--------------------------------------------------------------------------
                           // Event : Memory Read 64 bit TLP
@@ -487,91 +487,91 @@ begin
 
 
                           // make sure P_READ_DATA has known initial value
-                          board.RP.tx_usrapp.P_READ_DATA = 32'hffff_ffff;
+                          board_with_pipe.RP.tx_usrapp.P_READ_DATA = 32'hffff_ffff;
 
                           // Default 1DW PIO
                           fork
-                             board.RP.tx_usrapp.TSK_TX_MEMORY_READ_64(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                                      board.RP.tx_usrapp.DEFAULT_TC, 10'd1,
-                                                                     {board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii+1][31:0],
-                                                                      board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0]+8'h20+(board.RP.tx_usrapp.ii*8'h20)},
+                             board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_READ_64(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                                      board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 10'd1,
+                                                                     {board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii+1][31:0],
+                                                                      board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0]+8'h20+(board_with_pipe.RP.tx_usrapp.ii*8'h20)},
                                                                       4'h0, 4'hF);
-                             board.RP.tx_usrapp.TSK_WAIT_FOR_READ_DATA;
+                             board_with_pipe.RP.tx_usrapp.TSK_WAIT_FOR_READ_DATA;
                           join
 
-                          if  (board.RP.tx_usrapp.P_READ_DATA != {board.RP.tx_usrapp.DATA_STORE[3],
-                                                                  board.RP.tx_usrapp.DATA_STORE[2],
-                                                                  board.RP.tx_usrapp.DATA_STORE[1],
-                                                                  board.RP.tx_usrapp.DATA_STORE[0] })
+                          if  (board_with_pipe.RP.tx_usrapp.P_READ_DATA != {board_with_pipe.RP.tx_usrapp.DATA_STORE[3],
+                                                                  board_with_pipe.RP.tx_usrapp.DATA_STORE[2],
+                                                                  board_with_pipe.RP.tx_usrapp.DATA_STORE[1],
+                                                                  board_with_pipe.RP.tx_usrapp.DATA_STORE[0] })
                           begin
                               testError=1'b1;
                               $display("[%t] : Test FAILED --- Data Error Mismatch, Write Data %x != Read Data %x",
-                                       $realtime, {board.RP.tx_usrapp.DATA_STORE[3],
-                                                   board.RP.tx_usrapp.DATA_STORE[2], board.RP.tx_usrapp.DATA_STORE[1],
-                                                   board.RP.tx_usrapp.DATA_STORE[0]},board.RP.tx_usrapp.P_READ_DATA);
+                                       $realtime, {board_with_pipe.RP.tx_usrapp.DATA_STORE[3],
+                                                   board_with_pipe.RP.tx_usrapp.DATA_STORE[2], board_with_pipe.RP.tx_usrapp.DATA_STORE[1],
+                                                   board_with_pipe.RP.tx_usrapp.DATA_STORE[0]},board_with_pipe.RP.tx_usrapp.P_READ_DATA);
 
                           end
                           else begin
                               $display("[%t] : Test PASS --- 1DW Write Data: %x successfully received",
-                                       $realtime, board.RP.tx_usrapp.P_READ_DATA);
+                                       $realtime, board_with_pipe.RP.tx_usrapp.P_READ_DATA);
                           end
 
-                          board.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
-                          board.RP.tx_usrapp.DEFAULT_TAG = board.RP.tx_usrapp.DEFAULT_TAG + 1;
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
+                          board_with_pipe.RP.tx_usrapp.DEFAULT_TAG = board_with_pipe.RP.tx_usrapp.DEFAULT_TAG + 1;
 
                           // Optional 2DW PIO
-                          board.RP.tx_usrapp.DATA_STORE[0] = {board.RP.tx_usrapp.ii+4'hA,4'h4};//8'h04;
-                          board.RP.tx_usrapp.DATA_STORE[1] = {board.RP.tx_usrapp.ii+4'hA,4'h3};//8'h03;
-                          board.RP.tx_usrapp.DATA_STORE[2] = {board.RP.tx_usrapp.ii+4'hA,4'h2};//8'h02;
-                          board.RP.tx_usrapp.DATA_STORE[3] = {board.RP.tx_usrapp.ii+4'hA,4'h1};//8'h01;
-                          board.RP.tx_usrapp.DATA_STORE[4] = {board.RP.tx_usrapp.ii+4'hA,4'h8};//8'h14;
-                          board.RP.tx_usrapp.DATA_STORE[5] = {board.RP.tx_usrapp.ii+4'hA,4'h7};//8'h13;
-                          board.RP.tx_usrapp.DATA_STORE[6] = {board.RP.tx_usrapp.ii+4'hA,4'h6};//8'h12;
-                          board.RP.tx_usrapp.DATA_STORE[7] = {board.RP.tx_usrapp.ii+4'hA,4'h5};//8'h11;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[0] = {board_with_pipe.RP.tx_usrapp.ii+4'hA,4'h4};//8'h04;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[1] = {board_with_pipe.RP.tx_usrapp.ii+4'hA,4'h3};//8'h03;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[2] = {board_with_pipe.RP.tx_usrapp.ii+4'hA,4'h2};//8'h02;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[3] = {board_with_pipe.RP.tx_usrapp.ii+4'hA,4'h1};//8'h01;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[4] = {board_with_pipe.RP.tx_usrapp.ii+4'hA,4'h8};//8'h14;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[5] = {board_with_pipe.RP.tx_usrapp.ii+4'hA,4'h7};//8'h13;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[6] = {board_with_pipe.RP.tx_usrapp.ii+4'hA,4'h6};//8'h12;
+                          board_with_pipe.RP.tx_usrapp.DATA_STORE[7] = {board_with_pipe.RP.tx_usrapp.ii+4'hA,4'h5};//8'h11;
  
-                          board.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_64(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                                    board.RP.tx_usrapp.DEFAULT_TC, 10'd2,
-                                                                   {board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii+1][31:0],
-                                                                    board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0]+8'h24+(board.RP.tx_usrapp.ii*8'h20)},
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_WRITE_64(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                                    board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 10'd2,
+                                                                   {board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii+1][31:0],
+                                                                    board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0]+8'h24+(board_with_pipe.RP.tx_usrapp.ii*8'h20)},
                                                                     4'hF, 4'hF, 1'b0);
-                          board.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
-                          board.RP.tx_usrapp.DEFAULT_TAG = board.RP.tx_usrapp.DEFAULT_TAG + 1;
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
+                          board_with_pipe.RP.tx_usrapp.DEFAULT_TAG = board_with_pipe.RP.tx_usrapp.DEFAULT_TAG + 1;
  
                           fork
-                             board.RP.tx_usrapp.TSK_TX_MEMORY_READ_64(board.RP.tx_usrapp.DEFAULT_TAG,
-                                                                      board.RP.tx_usrapp.DEFAULT_TC, 10'd2,
-                                                                     {board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii+1][31:0],
-                                                                      board.RP.tx_usrapp.BAR_INIT_P_BAR[board.RP.tx_usrapp.ii][31:0]+8'h24+(board.RP.tx_usrapp.ii*8'h20)},
+                             board_with_pipe.RP.tx_usrapp.TSK_TX_MEMORY_READ_64(board_with_pipe.RP.tx_usrapp.DEFAULT_TAG,
+                                                                      board_with_pipe.RP.tx_usrapp.DEFAULT_TC, 10'd2,
+                                                                     {board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii+1][31:0],
+                                                                      board_with_pipe.RP.tx_usrapp.BAR_INIT_P_BAR[board_with_pipe.RP.tx_usrapp.ii][31:0]+8'h24+(board_with_pipe.RP.tx_usrapp.ii*8'h20)},
                                                                       4'hF, 4'hF);
-                             board.RP.tx_usrapp.TSK_WAIT_FOR_READ_DATA;
+                             board_with_pipe.RP.tx_usrapp.TSK_WAIT_FOR_READ_DATA;
                           join
 
-                          if  ( (board.RP.tx_usrapp.P_READ_DATA   != {board.RP.tx_usrapp.DATA_STORE[7],
-                                                                      board.RP.tx_usrapp.DATA_STORE[6],
-                                                                      board.RP.tx_usrapp.DATA_STORE[5],
-                                                                      board.RP.tx_usrapp.DATA_STORE[4] })
+                          if  ( (board_with_pipe.RP.tx_usrapp.P_READ_DATA   != {board_with_pipe.RP.tx_usrapp.DATA_STORE[7],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[6],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[5],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[4] })
                                  ||
-                                (board.RP.tx_usrapp.P_READ_DATA_2 != {board.RP.tx_usrapp.DATA_STORE[3],
-                                                                      board.RP.tx_usrapp.DATA_STORE[2],
-                                                                      board.RP.tx_usrapp.DATA_STORE[1],
-                                                                      board.RP.tx_usrapp.DATA_STORE[0] }) )
+                                (board_with_pipe.RP.tx_usrapp.P_READ_DATA_2 != {board_with_pipe.RP.tx_usrapp.DATA_STORE[3],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[2],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[1],
+                                                                      board_with_pipe.RP.tx_usrapp.DATA_STORE[0] }) )
                           begin
                              testError=1'b1;
                              $display("[%t] : Test FAILED --- Data Error Mismatch, Write Data %x != Read Data %x",
-                                       $realtime, {board.RP.tx_usrapp.DATA_STORE[7],board.RP.tx_usrapp.DATA_STORE[6],
-                                                   board.RP.tx_usrapp.DATA_STORE[5],board.RP.tx_usrapp.DATA_STORE[4],
-                                                   board.RP.tx_usrapp.DATA_STORE[3],board.RP.tx_usrapp.DATA_STORE[2],
-                                                   board.RP.tx_usrapp.DATA_STORE[1],board.RP.tx_usrapp.DATA_STORE[0]},
-                                                   {board.RP.tx_usrapp.P_READ_DATA,board.RP.tx_usrapp.P_READ_DATA_2});
+                                       $realtime, {board_with_pipe.RP.tx_usrapp.DATA_STORE[7],board_with_pipe.RP.tx_usrapp.DATA_STORE[6],
+                                                   board_with_pipe.RP.tx_usrapp.DATA_STORE[5],board_with_pipe.RP.tx_usrapp.DATA_STORE[4],
+                                                   board_with_pipe.RP.tx_usrapp.DATA_STORE[3],board_with_pipe.RP.tx_usrapp.DATA_STORE[2],
+                                                   board_with_pipe.RP.tx_usrapp.DATA_STORE[1],board_with_pipe.RP.tx_usrapp.DATA_STORE[0]},
+                                                   {board_with_pipe.RP.tx_usrapp.P_READ_DATA,board_with_pipe.RP.tx_usrapp.P_READ_DATA_2});
 
                           end
                           else begin
                              $display("[%t] : Test PASS --- 2DW Write Data: %x successfully received",
-                                      $realtime, {board.RP.tx_usrapp.P_READ_DATA,board.RP.tx_usrapp.P_READ_DATA_2});
+                                      $realtime, {board_with_pipe.RP.tx_usrapp.P_READ_DATA,board_with_pipe.RP.tx_usrapp.P_READ_DATA_2});
                           end
 
-                          board.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
-                          board.RP.tx_usrapp.DEFAULT_TAG = board.RP.tx_usrapp.DEFAULT_TAG + 1;
+                          board_with_pipe.RP.tx_usrapp.TSK_TX_CLK_EAT(10);
+                          board_with_pipe.RP.tx_usrapp.DEFAULT_TAG = board_with_pipe.RP.tx_usrapp.DEFAULT_TAG + 1;
 
                      end
                 default : $display("Error case in usrapp_tx\n");

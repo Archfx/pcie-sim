@@ -584,13 +584,13 @@ end
 
         if (txrx) begin
 
-          board.RP.com_usrapp.frame_store_tx[board.RP.com_usrapp.frame_store_tx_idx] = _byte;
-          board.RP.com_usrapp.frame_store_tx_idx = board.RP.com_usrapp.frame_store_tx_idx + 1;
+          board_with_pipe.RP.com_usrapp.frame_store_tx[board_with_pipe.RP.com_usrapp.frame_store_tx_idx] = _byte;
+          board_with_pipe.RP.com_usrapp.frame_store_tx_idx = board_with_pipe.RP.com_usrapp.frame_store_tx_idx + 1;
 
         end else begin
 
-          board.RP.com_usrapp.frame_store_rx[board.RP.com_usrapp.frame_store_rx_idx] = _byte;
-          board.RP.com_usrapp.frame_store_rx_idx = board.RP.com_usrapp.frame_store_rx_idx + 1;
+          board_with_pipe.RP.com_usrapp.frame_store_rx[board_with_pipe.RP.com_usrapp.frame_store_rx_idx] = _byte;
+          board_with_pipe.RP.com_usrapp.frame_store_rx_idx = board_with_pipe.RP.com_usrapp.frame_store_rx_idx + 1;
         end
 
       end 
@@ -627,13 +627,13 @@ end
 
         if (txrx) begin
 
-          board.RP.com_usrapp.frame_store_tx[board.RP.com_usrapp.frame_store_tx_idx] = _byte;
-          board.RP.com_usrapp.frame_store_tx_idx = board.RP.com_usrapp.frame_store_tx_idx + 1;
+          board_with_pipe.RP.com_usrapp.frame_store_tx[board_with_pipe.RP.com_usrapp.frame_store_tx_idx] = _byte;
+          board_with_pipe.RP.com_usrapp.frame_store_tx_idx = board_with_pipe.RP.com_usrapp.frame_store_tx_idx + 1;
 
         end else begin
 
-          board.RP.com_usrapp.frame_store_rx[board.RP.com_usrapp.frame_store_rx_idx] = _byte;
-          board.RP.com_usrapp.frame_store_rx_idx = board.RP.com_usrapp.frame_store_rx_idx + 1;
+          board_with_pipe.RP.com_usrapp.frame_store_rx[board_with_pipe.RP.com_usrapp.frame_store_rx_idx] = _byte;
+          board_with_pipe.RP.com_usrapp.frame_store_rx_idx = board_with_pipe.RP.com_usrapp.frame_store_rx_idx + 1;
         end
 
       end 
@@ -687,13 +687,13 @@ end
 
         if (txrx) begin
 
-          board.RP.com_usrapp.frame_store_tx[board.RP.com_usrapp.frame_store_tx_idx] = _byte;
-          board.RP.com_usrapp.frame_store_tx_idx = board.RP.com_usrapp.frame_store_tx_idx + 1;
+          board_with_pipe.RP.com_usrapp.frame_store_tx[board_with_pipe.RP.com_usrapp.frame_store_tx_idx] = _byte;
+          board_with_pipe.RP.com_usrapp.frame_store_tx_idx = board_with_pipe.RP.com_usrapp.frame_store_tx_idx + 1;
 
         end else begin
 
-          board.RP.com_usrapp.frame_store_rx[board.RP.com_usrapp.frame_store_rx_idx] = _byte;
-          board.RP.com_usrapp.frame_store_rx_idx = board.RP.com_usrapp.frame_store_rx_idx + 1;
+          board_with_pipe.RP.com_usrapp.frame_store_rx[board_with_pipe.RP.com_usrapp.frame_store_rx_idx] = _byte;
+          board_with_pipe.RP.com_usrapp.frame_store_rx_idx = board_with_pipe.RP.com_usrapp.frame_store_rx_idx + 1;
         end
 
       end 
@@ -750,13 +750,13 @@ end
 
         if (txrx) begin
 
-          board.RP.com_usrapp.frame_store_tx[board.RP.com_usrapp.frame_store_tx_idx] = _byte;
-          board.RP.com_usrapp.frame_store_tx_idx = board.RP.com_usrapp.frame_store_tx_idx + 1;
+          board_with_pipe.RP.com_usrapp.frame_store_tx[board_with_pipe.RP.com_usrapp.frame_store_tx_idx] = _byte;
+          board_with_pipe.RP.com_usrapp.frame_store_tx_idx = board_with_pipe.RP.com_usrapp.frame_store_tx_idx + 1;
 
         end else begin
 
-          board.RP.com_usrapp.frame_store_rx[board.RP.com_usrapp.frame_store_rx_idx] = _byte;
-          board.RP.com_usrapp.frame_store_rx_idx = board.RP.com_usrapp.frame_store_rx_idx + 1;
+          board_with_pipe.RP.com_usrapp.frame_store_rx[board_with_pipe.RP.com_usrapp.frame_store_rx_idx] = _byte;
+          board_with_pipe.RP.com_usrapp.frame_store_rx_idx = board_with_pipe.RP.com_usrapp.frame_store_rx_idx + 1;
         end
 
       end 

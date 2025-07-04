@@ -57,11 +57,18 @@ else
     exit 1
 fi
 
+# Source Vivado settings
+if [ -f "/media/bigdisk/Xilinx/2025.1/Vivado/settings64.sh" ]; then
+    print_status "Sourcing Vivado settings..."
+    source /media/bigdisk/Xilinx/2025.1/Vivado/settings64.sh
+else
+    print_error "Vivado settings file not found at /media/bigdisk/Xilinx/2025.1/Vivado/settings64.sh"
+    exit 1
+fi
+
 # Check for Vivado
 if ! command -v vivado &> /dev/null; then
-    print_error "Vivado not found in PATH"
-    print_error "Please source Vivado settings script first:"
-    print_error "  source /opt/Xilinx/Vivado/2023.2/settings64.sh"
+    print_error "Vivado not found in PATH after sourcing settings"
     exit 1
 fi
 
@@ -103,7 +110,7 @@ run_xsim() {
     mkdir -p pcie4_uscale_plus_0_ex.sim/sim_1/behav/xsim
     
     # Copy modified testbench to simulation directory
-    cp imports/board_with_pipe.v imports/pipe_interface.sv pcie4_uscale_plus_0_ex.sim/sim_1/behav/xsim/
+    cp imports/board_with_pipe.v imports/pipe_interface_simple.sv pcie4_uscale_plus_0_ex.sim/sim_1/behav/xsim/
     
     # Generate XSim script
     cat > run_xsim.tcl << EOF
@@ -111,7 +118,7 @@ run_xsim() {
 
 # Add sources
 add_files imports/board_with_pipe.v
-add_files imports/pipe_interface.sv
+add_files imports/pipe_interface_simple.sv
 
 # Set top module
 set_property top board_with_pipe [get_filesets sim_1]
@@ -157,7 +164,7 @@ run_questa() {
     cat >> compile.do << EOF
 
 # Add Python interface files
-vlog -sv ../../../imports/pipe_interface.sv
+vlog -sv ../../../imports/pipe_interface_simple.sv
 vlog ../../../imports/board_with_pipe.v
 
 EOF

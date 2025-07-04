@@ -367,9 +367,9 @@ initial begin
   // RP Only                                                   //                             
   cfg_hot_reset_in                 <= 0 ;//        
 
-  cfg_ds_bus_number                <= board.RP.tx_usrapp.RP_BUS_DEV_FNS[15:8]; //[7:0]
-  cfg_ds_device_number             <= board.RP.tx_usrapp.RP_BUS_DEV_FNS[7:3];  //[4:0]
-  cfg_ds_function_number           <= board.RP.tx_usrapp.RP_BUS_DEV_FNS[2:0];  //[2:0]
+  cfg_ds_bus_number                <= board_with_pipe.RP.tx_usrapp.RP_BUS_DEV_FNS[15:8]; //[7:0]
+  cfg_ds_device_number             <= board_with_pipe.RP.tx_usrapp.RP_BUS_DEV_FNS[7:3];  //[4:0]
+  cfg_ds_function_number           <= board_with_pipe.RP.tx_usrapp.RP_BUS_DEV_FNS[2:0];  //[2:0]
 end
 /********************************************************************************************************************
 Task : TSK_READ_CFG_DW                
@@ -398,7 +398,7 @@ begin
   cfg_mgmt_read  <= #(Tcq) 1'b1;
 
   $display("[%t] : Reading Cfg Addr [0x%h]", $realtime, addr_);
-  $fdisplay(board.RP.com_usrapp.tx_file_ptr,
+  $fdisplay(board_with_pipe.RP.com_usrapp.tx_file_ptr,
             "\n[%t] : Local Configuration Read Access :", 
             $realtime);
                  
@@ -407,7 +407,7 @@ begin
   wait ( cfg_mgmt_read_write_done == 1'b1)
   #(Tcq);
 
-  $fdisplay(board.RP.com_usrapp.tx_file_ptr,
+  $fdisplay(board_with_pipe.RP.com_usrapp.tx_file_ptr,
             "\t\t\tCfg Addr [0x%h] -> Data [0x%h]\n", 
             {addr_,2'b00}, cfg_mgmt_read_data);
   cfg_mgmt_read <= #(Tcq) 1'b0;
@@ -446,7 +446,7 @@ begin
   cfg_mgmt_read        <= #(Tcq) 1'b0;
 
   $display("[%t] : Writing Cfg Addr [0x%h]", $realtime, addr_);
-  $fdisplay(board.RP.com_usrapp.tx_file_ptr,
+  $fdisplay(board_with_pipe.RP.com_usrapp.tx_file_ptr,
             "\n[%t] : Local Configuration Write Access :",
             $realtime);
 
